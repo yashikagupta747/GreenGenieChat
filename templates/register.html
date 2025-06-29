@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Environmental Science Chatbot{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-header h2 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-header p {
+        color: #7f8c8d;
+    }
+
+    .auth-logo {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+        display: block;
+    }
+
+    .form-control {
+        height: 48px;
+        border-radius: 8px;
+        border: 1px solid #dfe6e9;
+        padding-left: 15px;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #1abc9c;
+        box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-auth {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-register {
+        background: #3498db;
+        border: none;
+    }
+
+    .btn-register:hover {
+        background: #2980b9;
+        transform: translateY(-2px);
+    }
+
+    .password-strength {
+        height: 4px;
+        background: #dfe6e9;
+        border-radius: 2px;
+        margin-top: 8px;
+        overflow: hidden;
+    }
+
+    .strength-meter {
+        height: 100%;
+        width: 0;
+        background: #e74c3c;
+        transition: width 0.3s;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #7f8c8d;
+    }
+
+    .auth-footer a {
+        color: #3498db;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .alert {
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-header">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="auth-logo">
+        <h2>Create Your Account</h2>
+        <p>Join our environmental science community</p>
+    </div>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        
+        <div class="mb-3">
+            {{ form.username.label(class="form-label") }}
+            {{ form.username(class="form-control", placeholder="Choose a username") }}
+            {% if form.username.errors %}
+                {% for error in form.username.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control", placeholder="Enter your email") }}
+            {% if form.email.errors %}
+                {% for error in form.email.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control", placeholder="Create a password", id="password") }}
+            <div class="password-strength">
+                <div class="strength-meter" id="strength-meter"></div>
+            </div>
+            {% if form.password.errors %}
+                {% for error in form.password.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            {{ form.password2.label(class="form-label") }}
+            {{ form.password2(class="form-control", placeholder="Confirm password") }}
+            {% if form.password2.errors %}
+                {% for error in form.password2.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="d-grid mb-3">
+            {{ form.submit(class="btn btn-primary btn-auth btn-register") }}
+        </div>
+        
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+        </div>
+    </form>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('password');
+    const strengthMeter = document.getElementById('strength-meter');
+    
+    passwordInput.addEventListener('input', function() {
+        const strength = calculatePasswordStrength(this.value);
+        updateStrengthMeter(strength);
+    });
+    
+    function calculatePasswordStrength(password) {
+        let strength = 0;
+        
+        // Length check
+        if (password.length > 7) strength += 1;
+        if (password.length > 11) strength += 1;
+        
+        // Character variety
+        if (/[A-Z]/.test(password)) strength += 1;
+        if (/[0-9]/.test(password)) strength += 1;
+        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+        
+        return Math.min(strength, 5);
+    }
+    
+    function updateStrengthMeter(strength) {
+        const colors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#27ae60'];
+        const width = (strength / 5) * 100;
+        
+        strengthMeter.style.width = `${width}%`;
+        strengthMeter.style.backgroundColor = colors[strength - 1] || '#e74c3c';
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

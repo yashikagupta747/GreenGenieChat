@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Environmental Science Chatbot{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: rgb(235, 237, 236);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-header h2 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-header p {
+        color: #7f8c8d;
+    }
+
+    .auth-logo {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+        display: block;
+    }
+
+    .form-control {
+        height: 48px;
+        border-radius: 8px;
+        border: 1px solid #dfe6e9;
+        padding-left: 15px;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #1abc9c;
+        box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-auth {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-login {
+        background: #1abc9c;
+        border: none;
+    }
+
+    .btn-login:hover {
+        background: #16a085;
+        transform: translateY(-2px);
+    }
+
+    .remember-me {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        margin-top: 0;
+    }
+
+    .form-check-label {
+        margin-left: 8px;
+    }
+
+    .forgot-password {
+        color: #1abc9c;
+        text-decoration: none;
+    }
+
+    .forgot-password:hover {
+        text-decoration: underline;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #7f8c8d;
+    }
+
+    .auth-footer a {
+        color: #1abc9c;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .alert {
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-header">
+        <img src="{{ url_for('static', filename='images/download.jpeg') }}" alt="Logo" class="auth-logo">
+        <h2>Welcome Back</h2>
+        <p>Login to access your environmental science resources</p>
+    </div>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        
+        <div class="mb-3">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control", placeholder="Enter your email") }}
+            {% if form.email.errors %}
+                {% for error in form.email.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control", placeholder="Enter your password") }}
+            {% if form.password.errors %}
+                {% for error in form.password.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="mb-3 remember-me">
+            <div class="form-check">
+                {{ form.remember_me(class="form-check-input") }}
+                {{ form.remember_me.label(class="form-check-label") }}
+            </div>
+            <a href="#" class="forgot-password">Forgot password?</a>
+        </div>
+        
+        <div class="d-grid mb-3">
+            {{ form.submit(class="btn btn-primary btn-auth btn-login") }}
+        </div>
+        
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+        </div>
+    </form>
+</div>
+{% endblock %}

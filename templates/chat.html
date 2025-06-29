@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Environmental Science Chatbot{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 200px);
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: 2F5249;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .chat-header {
+        background-color: #2c3e50;
+        color: rgb(255, 255, 255);
+        padding: 15px 20px;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    #chat-history {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background-color: #0a321a;
+    }
+
+    .message {
+        margin-bottom: 15px;
+        max-width: 80%;
+        padding: 12px 15px;
+        border-radius: 18px;
+        line-height: 1.5;
+        font-size: 0.95rem;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .user-message {
+        background-color: rgb(67, 112, 87);
+        color: #e8eee8;
+        margin-left: auto;
+        border-bottom-right-radius: 5px;
+    }
+
+    .bot-message {
+        background-color: 437057;
+        color: #e8eee8;
+        margin-right: auto;
+        border-bottom-left-radius: 5px;
+    }
+
+    .bot-message ul {
+        padding-left: 20px;
+        margin: 10px 0;
+    }
+
+    .bot-message li {
+        margin-bottom: 8px;
+    }
+
+    .input-area {
+        display: flex;
+        padding: 15px;
+        background-color: rgb(45, 79, 43);
+        border-top: 1px solid #eee;
+    }
+
+    #user-input {
+        flex: 1;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 25px;
+        font-size: 1rem;
+        outline: none;
+    }
+
+    #sendBtn {
+        background: rgb(67, 112, 87);
+        color:#ddd;
+        border: none;
+        border-radius: 25px;
+        padding: 0 25px;
+        margin-left: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+    #sendBtn:hover {
+        background: #16a085;
+        transform: scale(1.02);
+    }
+
+    .timestamp {
+        font-size: 0.7rem;
+        color: #777;
+        margin-left: 10px;
+    }
+
+    .welcome-message {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #2c3e50;
+        font-weight: bold;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .chat-container {
+            height: calc(100vh - 150px);
+        }
+        
+        .message {
+            max-width: 90%;
+        }
+    }
+
+    .bot-message .message-content ul {
+    padding-left: 20px;
+    margin: 10px 0;
+    list-style-type: disc;
+}
+
+.bot-message .message-content li {
+    margin-bottom: 8px;
+    display: list-item;
+}
+
+.bot-message .message-content {
+    display: inline-block;
+    width: 100%;
+}
+.bot-message .message-content {
+    white-space: pre-wrap;
+}
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        Environmental Science Chatbot
+        <span style="float: right;">Welcome, {{ current_user.username }}!</span>
+    </div>
+    
+    <div id="chat-history">
+        {% for message in messages %}
+        <div class="message-pair">
+            <div class="message user-message">
+                <strong>You:</strong> {{ message.user_message }}
+                <span class="timestamp">{{ message.timestamp.strftime('%H:%M') }}</span>
+            </div>
+            <div class="message bot-message">
+    <strong>Bot:</strong> 
+    <div class="message-content">{{ message.bot_response|safe }}</div>
+    <span class="timestamp">{{ message.timestamp.strftime('%H:%M') }}</span>
+</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="input-area">
+        <input type="text" id="user-input" class="form-control" placeholder="Ask anything..." required>
+        <button id="sendBtn" type="button">Send</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatHistory = document.getElementById('chat-history');
+    
+    // Auto-scroll to bottom on page load
+    scrollToBottom();
+    
+    // Handle sending messages
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+    
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+        
+        // Add user message to chat
+        appendMessage('You', message, new Date());
+        userInput.value = '';
+        scrollToBottom();
+        
+        try {
+            // Show typing indicator
+            const typingIndicator = appendMessage('Bot', 'Typing...', new Date());
+            
+            // Send to backend
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            const data = await response.json();
+            
+            // Remove typing indicator
+            chatHistory.removeChild(typingIndicator);
+            
+            // Add bot response
+            appendMessage('Bot', data.response, new Date());
+            scrollToBottom();
+            
+        } catch (error) {
+            console.error('Error:', error);
+            appendMessage('System', 'Error sending message. Please try again.', new Date());
+            scrollToBottom();
+        }
+    }
+    
+    function appendMessage(sender, text, timestamp) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender === 'You' ? 'user-message' : 'bot-message'}`;
+        
+        const timeString = timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        if (sender === 'Bot' && text === 'Typing...') {
+            messageDiv.innerHTML = `<strong>Bot:</strong> <em>${text}</em>`;
+            messageDiv.id = 'typing-indicator';
+        } else {
+            messageDiv.innerHTML = `
+                <strong>${sender}:</strong> 
+                <div class="message-content">${text}</div>
+                <span class="timestamp">${timeString}</span>
+            `;
+        }
+        
+        chatHistory.appendChild(messageDiv);
+        return messageDiv;
+}
+    
+    function scrollToBottom() {
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+});
+</script>
+{% endblock %}

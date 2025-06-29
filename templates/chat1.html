@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+
+{% block title %}Environmental Science Chatbot{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #00a86b;
+        --secondary: #00cc88;
+        --accent: #ff5555;
+        --dark-bg: #121212;
+        --darker-bg: #0a0a0a;
+        --light-text: #e0e0e0;
+        --dark-text: #121212;
+        --card-bg: #1e1e1e;
+    }
+    
+    .content-wrap {
+        background-color: var(--dark-bg);
+        color: var(--light-text);
+        min-height: 100vh;
+
+        padding: 20px;
+    }
+    
+    .dashboard {
+        display: grid;
+        grid-template-columns: 300px 2fr;
+        gap: 20px;
+        height: calc(100vh - 40px);
+        max-width: 1400px;
+        margin: 0;
+        padding: 0 20px;
+    }
+    
+    .data-panel {
+        background: var(--darker-bg);
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border: 1px solid #333;
+        overflow-y: auto;
+    height: 100%;
+    }
+    
+    .chat-container {
+        background: var(--darker-bg);
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        border: 1px solid #333;
+    }
+    
+    .chat-header {
+        background: rgb(27, 71, 58);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px 10px 0 0;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    #chatbox {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: rgb(9, 46, 8);
+        min-height: 0;
+    }
+    
+    .message {
+        margin-bottom: 15px;
+        max-width: 80%;
+        padding: 12px 15px;
+        border-radius: 18px;
+        line-height: 1.4;
+        font-size: 0.95rem;
+        animation: fadeIn 0.3s ease-out;
+         position: relative;
+    }
+    
+    .user-message {
+        background: #333;
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 5px;
+        border: 1px solid #444;
+    }
+    
+    .bot-message {
+        background: var(--card-bg);
+        color: var(--light-text);
+        margin-right: auto;
+        border-bottom-left-radius: 5px;
+        border: 1px solid #333;
+    }
+    
+    .input-area {
+        display: flex;
+        padding: 15px;
+        background: var(--darker-bg);
+        border-radius: 0 0 10px 10px;
+        border-top: 1px solid #333;
+    }
+    
+    #userInput {
+        flex: 1;
+        padding: 12px 15px;
+        border: 1px solid #333;
+        border-radius: 25px;
+        font-size: 1rem;
+        outline: none;
+        background: var(--card-bg);
+        color: var(--light-text);
+    }
+    
+    #sendBtn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 0 25px;
+        margin-left: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    
+    #sendBtn:hover {
+        background: var(--secondary);
+        transform: scale(1.02);
+    }
+    
+    .data-card {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #333;
+    }
+    
+    .data-card:last-child {
+        border-bottom: none;
+    }
+    
+    .data-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--primary);
+    }
+    
+    .data-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--secondary);
+        margin: 5px 0;
+    }
+    
+    .data-trend {
+        font-size: 0.9rem;
+        color: #aaa;
+    }
+    
+    .data-trend.positive {
+        color: var(--accent);
+    }
+    
+    .data-trend.negative {
+        color: var(--primary);
+    }
+    
+    .timeline {
+        margin-top: 30px;
+    }
+    
+    .timeline-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: var(--primary);
+    }
+    
+    .timeline-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+    
+    .timeline-item {
+        background: var(--card-bg);
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        text-align: center;
+        border: 1px solid #333;
+    }
+    
+    .sources {
+        font-size: 0.8rem;
+        color: #aaa;
+        padding: 10px 20px;
+        background: var(--darker-bg);
+        border-radius: 0 0 10px 10px;
+        border-top: 1px solid #333;
+    }
+    
+    .key-point {
+        font-weight: 600;
+        color: var(--primary);
+    }
+    
+    .example {
+        font-style: italic;
+        color: #aaa;
+    }
+    
+    .mitigation {
+        color: var(--secondary);
+    }
+    
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--darker-bg);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 4px;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @media (max-width: 1024px) {
+        .dashboard {
+            grid-template-columns: 1fr;
+        }
+        
+        .chat-container {
+            height: 60vh;
+        }
+    }
+</style>
+{% endblock %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+{% block content %}
+<div class="dashboard">
+    <div class="data-panel">
+        <h2 style="color: var(--primary); margin-top: 0;">Key Environmental Metrics</h2>
+        
+        <div class="data-card">
+            <div class="data-title">CO₂ Levels</div>
+            <div class="data-value">421.1 ppm</div>
+            <div class="data-trend positive">+2.9 ppm/year</div>
+        </div>
+        
+        <div class="data-card">
+            <div class="data-title">Global Temperature</div>
+            <div class="data-value">1.2 °C</div>
+            <div class="data-trend positive">+0.18°C/decade</div>
+        </div>
+        
+        <div class="data-card">
+            <div class="data-title">Sea Level Rise</div>
+            <div class="data-value">185 mm</div>
+            <div class="data-trend positive">+3.3 mm/year</div>
+        </div>
+        
+        <div class="data-card">
+            <div class="data-title">Forest Cover</div>
+            <div class="data-value">27%</div>
+            <div class="data-trend negative">-0.1% annually</div>
+        </div>
+        
+        <!-- <div class="timeline">
+            <div class="timeline-title">Environmental Timeline</div>
+            <div class="timeline-grid">
+                <div class="timeline-item">IPCC Established</div>
+                <div class="timeline-item">Rio Earth Summit</div>
+                <div class="timeline-item">Kyoto Protocol</div>
+                <div class="timeline-item">Paris Agreement</div>
+                <div class="timeline-item">COVID-19 Impact</div>
+                <div class="timeline-item">Hottest Year</div>
+            </div>
+        </div> -->
+    </div>
+    
+    <div class="chat-container">
+       
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>Environmental Science Chatbot</h3>
+                    <div>
+                        <span class="text-muted">Welcome, {{ current_user.username }}!</span>
+                        <!-- <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-secondary ms-2">Logout</a> -->
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="chat-history" class="mb-3" style="height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+                        <!-- Load existing chat history -->
+                        {% for message in messages %}
+                        <div class="message-pair mb-3">
+                            <div class="user-message">
+                                <strong>You:</strong> {{ message.user_message }}
+                                <small class="text-muted">({{ message.timestamp.strftime('%Y-%m-%d %H:%M') }})</small>
+                            </div>
+                            <div class="bot-message mt-2">
+                                <strong>Bot:</strong> {{ message.bot_response|safe }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <form id="chat-form">
+                        <div class="input-group">
+                            <input type="text" id="user-input" class="form-control" placeholder="Ask about environmental science..." required>
+                            <button type="submit" class="btn btn-primary">Send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('userInput');
+    const chatbox = document.getElementById('chatbox');
+    const sources = document.getElementById('sources');
+    
+    async function sendMessage() {
+        if (!input.value.trim()) return;
+        
+        // Add user message
+        const userDiv = document.createElement('div');
+        userDiv.className = 'message user-message';
+        userDiv.textContent = input.value;
+        chatbox.appendChild(userDiv);
+        
+        const userMessage = input.value;
+        input.value = '';
+        
+        // Add typing indicator
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message bot-message';
+        typingDiv.innerHTML = '<span style="color: var(--secondary)">Researching...</span>';
+        chatbox.appendChild(typingDiv);
+        
+        // Scroll to bottom
+        chatbox.scrollTop = chatbox.scrollHeight;
+        
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ message: userMessage })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Remove typing indicator
+            chatbox.removeChild(typingDiv);
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Process bot response
+            const botDiv = document.createElement('div');
+            botDiv.className = 'message bot-message';
+            
+            // Format the response with HTML
+            let formattedResponse = data.response
+                .replace(/\n•/g, '<br>•')
+                .replace(/Key Point:/g, '<span class="key-point">Key Point:</span>')
+                .replace(/Example:/g, '<span class="example">Example:</span>')
+                .replace(/Mitigation Strategy:/g, '<span class="mitigation">Mitigation:</span>');
+            
+            botDiv.innerHTML = formattedResponse;
+            chatbox.appendChild(botDiv);
+            
+            if (data.sources && data.sources.length > 0) {
+                sources.textContent = `Sources: ${data.sources.join(', ')}`;
+            }
+            
+            chatbox.scrollTop = chatbox.scrollHeight;
+        } catch (error) {
+            chatbox.removeChild(typingDiv);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'message bot-message';
+            errorDiv.style.color = 'var(--accent)';
+            errorDiv.textContent = `Error: ${error.message}`;
+            chatbox.appendChild(errorDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+    }
+    
+    input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+    
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    
+    // Focus input on page load
+    input.focus();
+});
+</script> -->
+
+<!-- Place this at the end of your chat.html, before </body> -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const chatHistory = document.getElementById('chat-history');
+
+    // Handle message submission
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // Add user message immediately
+        appendMessage('You', message, new Date().toLocaleString());
+        userInput.value = '';
+        scrollToBottom();
+
+        // Send to backend
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.response) {
+                appendMessage('Bot', data.response, new Date().toLocaleString());
+                scrollToBottom();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            appendMessage('System', 'Error sending message. Please try again.', new Date().toLocaleString());
+            scrollToBottom();
+        });
+    });
+
+    // Helper functions
+    function appendMessage(sender, text, timestamp) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message-pair', 'mb-3');
+        
+        const userDiv = document.createElement('div');
+        userDiv.classList.add('user-message');
+        userDiv.innerHTML = `<strong>${sender}:</strong> ${text} <small class="text-muted">(${timestamp})</small>`;
+        
+        messageDiv.appendChild(userDiv);
+        
+        if (sender === 'Bot') {
+            const botDiv = document.createElement('div');
+            botDiv.classList.add('bot-message', 'mt-2');
+            botDiv.innerHTML = `<strong>Bot:</strong> ${text}`;
+            messageDiv.appendChild(botDiv);
+        }
+        
+        chatHistory.appendChild(messageDiv);
+    }
+
+    function scrollToBottom() {
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+});
+</script>
+
+
+{% endblock %}
