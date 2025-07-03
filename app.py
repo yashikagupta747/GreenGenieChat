@@ -4,10 +4,15 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_bcrypt import Bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
-
 from chat import EnvironmentalExpert
 from models import db, User, ChatMessage
 from forms import LoginForm, RegistrationForm
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+print("HUGGINGFACE_API_KEY loaded in app.py:", os.getenv("HUGGINGFACE_API_KEY") is not None)
 
 app = Flask(__name__)
 
@@ -39,7 +44,6 @@ expert = EnvironmentalExpert()
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('chat'))
-    
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -47,25 +51,22 @@ def login():
             login_user(user, remember=form.remember_me.data)
             return redirect(url_for('chat'))
         flash('Invalid email or password')
-    
     return render_template('login.html', form=form)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('chat'))
-    
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_password = generate_password_hash(form.password.data)
-        user = User(username=form.username.data, 
-                   email=form.email.data, 
-                   password_hash=hashed_password)
+        user = User(username=form.username.data,
+                    email=form.email.data,
+                    password_hash=hashed_password)
         db.session.add(user)
         db.session.commit()
         flash('Registration successful!')
         return redirect(url_for('login'))
-    
     return render_template('register.html', form=form)
 
 @app.route('/logout')
@@ -76,19 +77,12 @@ def logout():
     return redirect(url_for('login'))
 
 # Main Routes
-# @app.route('/')
-# def home():
-#     if current_user.is_authenticated:
-#         return redirect(url_for('chat'))
-#     return redirect(url_for('login'))
-
 @app.route('/')
 def environment():
     return render_template('environment.html')
 
 @app.route('/dashboard')
 def dashboard():
-    
     return render_template('dashboard.html')
 
 @app.route('/chat')
@@ -96,7 +90,7 @@ def dashboard():
 def chat():
     # Load user's chat history
     messages = ChatMessage.query.filter_by(user_id=current_user.id)\
-                              .order_by(ChatMessage.timestamp.asc()).all()
+        .order_by(ChatMessage.timestamp.asc()).all()
     return render_template('chat.html', messages=messages)
 
 @app.route('/api/chat', methods=['POST'])
@@ -105,14 +99,11 @@ def chat_api():
     try:
         data = request.get_json()
         user_message = data.get('message', '')
-
         if not user_message.strip():
             return jsonify({'error': 'Empty message'}), 400
-
         # Get response from the EnvironmentalExpert
         bot_response = expert.get_response(user_message)
         sources = expert.get_last_sources()
-
         # Save to database
         chat_message = ChatMessage(
             user_id=current_user.id,
@@ -122,21 +113,13 @@ def chat_api():
         )
         db.session.add(chat_message)
         db.session.commit()
-
         response = {
             'response': bot_response,
             'sources': sources if sources else ['IPCC', 'NASA', 'NOAA', 'UNEP']
         }
-
         return jsonify(response)
-
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-# # Database initialization
-# @app.before_first_request
-# def create_tables():
-#     db.create_all()
 
 if __name__ == '__main__':
     with app.app_context():
