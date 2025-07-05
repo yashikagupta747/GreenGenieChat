@@ -1,26 +1,15 @@
-Flask==2.3.2
-Flask-Login==0.6.2
-Flask-WTF==1.1.1
-Flask-SQLAlchemy==3.0.3
-Flask-Migrate==4.0.5
-gunicorn==21.2.0
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-WTF
+WTForms
+pandas
+requests
+numpy
+scipy
+Flask-Cors
+Flask-Bcrypt
+Werkzeug
+python-dotenv
 
-pandas==2.2.2
-numpy==1.26.4
-scipy==1.13.1
-requests==2.32.3
-
-bcrypt==4.1.3
-
-# For security and rate limiting (optional but recommended)
-Flask-Limiter==3.5.1
-Flask-Talisman==1.1.0
-
-# For environment variable management (optional)
-python-dotenv==1.0.1
-
-# For testing (optional)
-pytest==8.2.1
-
-# If you use Cohere's official Python client (otherwise, requests is enough)
 cohere==5.5.3
